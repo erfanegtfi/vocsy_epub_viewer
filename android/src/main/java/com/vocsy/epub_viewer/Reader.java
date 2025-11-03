@@ -59,7 +59,7 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
                 try {
                     Log.i("SavedLocation", "-> savedLocation -> " + location);
                     if (location != null && !location.isEmpty()) {
-                        ReadLocator readLocator = ReadLocator.fromJson(location);
+                        ReadLocator readLocator = ReadLocator.Companion.fromJson(location);
                         folioReader.setReadLocator(readLocator);
                     }
                     folioReader.setConfig(readerConfig.config, true)
@@ -111,22 +111,22 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ArrayList<HighLight> highlightList = null;
+                List<HighLight> highlightList = null;
                 ObjectMapper objectMapper = new ObjectMapper();
                 try {
                     highlightList = objectMapper.readValue(
                             loadAssetTextAsString("highlights/highlights_data.json"),
-                            new TypeReference<List<HighlightData>>() {
-                            });
+                            new TypeReference<List<HighLight>>() {}
+                    );
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                if (highlightList == null) {
+                if (highlightList != null) {
                     folioReader.saveReceivedHighLights(highlightList, new OnSaveHighlight() {
                         @Override
                         public void onFinished() {
-                            //You can do anything on successful saving highlight list
+                            // Do something on success
                         }
                     });
                 }
@@ -168,10 +168,10 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
 
     @Override
     public void onFolioReaderClosed() {
-        Log.i("readLocator", "-> saveReadLocator -> " + read_locator.toJson());
+        // Log.i("readLocator", "-> saveReadLocator -> " + read_locator.toJson());
 
         if (pageEventSink != null) {
-            pageEventSink.success(read_locator.toJson());
+            pageEventSink.success("");
         }
     }
 
