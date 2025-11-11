@@ -12,7 +12,11 @@ import com.folioreader.model.locators.ReadLocator;
 import com.folioreader.ui.base.OnSaveHighlight;
 import com.folioreader.util.OnHighlightListener;
 import com.folioreader.util.ReadLocatorListener;
+import com.folioreader.util.OnBookmarkListener;
+import com.folioreader.util.OnClosedListener;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +27,10 @@ import java.util.List;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
+import io.flutter.plugin.common.MethodChannel.Result;
 
-public class Reader implements OnHighlightListener, ReadLocatorListener, FolioReader.OnClosedListener {
+public class Reader implements OnHighlightListener, ReadLocatorListener,OnBookmarkListener, OnClosedListener {
 
     private ReaderConfig readerConfig;
     public FolioReader folioReader;
@@ -34,18 +40,19 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
     private EventChannel.EventSink pageEventSink;
     private BinaryMessenger messenger;
     private ReadLocator read_locator;
-    private static final String PAGE_CHANNEL = "sage";
+    private static final String PAGE_CHANNEL = "page";
 
     Reader(Context context, BinaryMessenger messenger, ReaderConfig config, EventChannel.EventSink sink) {
         this.context = context;
         readerConfig = config;
-
+        this.messenger = messenger;
         getHighlightsAndSave();
         //setPageHandler(messenger);
 
         folioReader = FolioReader.get()
                 .setOnHighlightListener(this)
                 .setReadLocatorListener(this)
+                .setBookmarkLocator(this)
                 .setOnClosedListener(this);
         pageEventSink = sink;
     }
@@ -185,5 +192,11 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
         read_locator = readLocator;
     }
 
+    @Override
+    public void onFolioReaderBookmarked(boolean isBookmarked) {
+         Map<String, Boolean> m = new HashMap<>();
+        m.put("bookmarked", isBookmarked);
+       new MethodChannel(messenger , "vocsy_epub_viewer").invokeMethod("set_bookmark", m);
+    }
 
 }

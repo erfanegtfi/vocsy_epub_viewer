@@ -14,11 +14,12 @@ public class ReaderConfig {
     private boolean allowSharing;
     private boolean showTts;
     private boolean nightMode;
+    private boolean bookmarked;
 
     public Config config;
 
     public ReaderConfig(Context context, String identifier, String themeColor,
-                        String scrollDirection, boolean allowSharing, boolean showTts , boolean nightMode){
+                        String scrollDirection, boolean allowSharing, boolean showTts , boolean nightMode, boolean bookmarked){
 
 //        config = AppUtil.getSavedConfig(context);
 //        if (config == null)
@@ -35,5 +36,6 @@ public class ReaderConfig {
         config.setShowRemainingIndicator(true);
         config.setShowTts(showTts);
         config.setNightMode(nightMode);
+        config.setBookmarked(bookmarked);
     }
 }
