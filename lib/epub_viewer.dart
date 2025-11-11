@@ -25,6 +25,7 @@ class VocsyEpub {
       {Color themeColor = Colors.blue,
       String identifier = 'book',
       bool nightMode = false,
+      bool bookmarked = false,
       EpubScrollDirection scrollDirection = EpubScrollDirection.ALLDIRECTIONS,
       bool allowSharing = false,
       bool enableTts = false}) async {
@@ -34,7 +35,8 @@ class VocsyEpub {
       "scrollDirection": Util.getDirection(scrollDirection),
       "allowSharing": allowSharing,
       'enableTts': enableTts,
-      'nightMode': nightMode
+      'nightMode': nightMode,
+      'bookmarked': bookmarked
     };
     await _channel.invokeMethod('setConfig', agrs);
   }
@@ -46,6 +48,13 @@ class VocsyEpub {
       "bookPath": bookPath,
       'lastLocation': lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
     };
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == "set_bookmark") {
+        final Map args = Map<String, dynamic>.from(call.arguments);
+        final bookmarked = args['bookmarked'] as bool?;
+        _onBookmarkTap?.call(bookmarked);
+      }
+    });
     _channel.invokeMethod('setChannel');
     await _channel.invokeMethod('open', agrs);
   }
@@ -59,6 +68,13 @@ class VocsyEpub {
   /// Last location is only available for android.
   static Future openAsset(String bookPath, {EpubLocator? lastLocation}) async {
     if (extension(bookPath) == '.epub') {
+      _channel.setMethodCallHandler((call) async {
+        if (call.method == "set_bookmark") {
+          final Map args = Map<String, dynamic>.from(call.arguments);
+          final bookmarked = args['bookmarked'] as bool?;
+          _onBookmarkTap?.call(bookmarked);
+        }
+      });
       Map<String, dynamic> agrs = {
         "bookPath": (await Util.getFileFromAsset(bookPath)).path,
         'lastLocation': lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
@@ -68,6 +84,11 @@ class VocsyEpub {
     } else {
       throw ('${extension(bookPath)} cannot be opened, use an EPUB File');
     }
+  }
+
+  static void Function(bool? bookmarked)? _onBookmarkTap;
+  static void setBookmarkListener(void Function(bool? bookmarked) listener) {
+    _onBookmarkTap = listener;
   }
 
   static Future setChannel() async {
